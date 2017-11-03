@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Circles</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background: #aaa;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            display: inline-block;
+            color: #fff;
+            font-size: 32px;
+        }
+
+        h2 {
+            display: inline-block;
+            color: #ddd;
+            font-size: 16px;
+        }
+
+        h3 {
+            color: #555;
+            font-size: 16px;
+        }
+
+        .headblock {
+            background: #777;
+            padding: 4px 8px;
+        }
+
+        .block {
+            margin: 16px;
+            max-width: 768px;
+
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        button {
+            background: #555;
+            color: #ddd;
+            border: 1px solid #aaa;
+            padding: 4px 16px 6px 16px;
+        }
+
+        input[type=radio] {
+            visibility: hidden;
+        }
+
+        label {
+            transition: color 0.2s;
+            color: #555;
+            vertical-align: middle;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .radio {
+            transition: background 0.2s, box-shadow 0.2s;
+            background: #555;
+            display: inline-block;
+            border: 3px solid #555;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            margin: 4px;
+            vertical-align: middle;
+            box-shadow: inset 0 0 0 5px #aaa;
+        }
+
+        input[type=radio]:checked ~ label{
+            /*color: #eee;*/
+        }
+        input[type=radio]:checked ~ .radio{
+            box-shadow: inset 0 0 0 2px #aaa;
+        }
+    </style>
+    <script>
+        charsets = {
+            "Binary": "　█",
+            "Binary 2": "　▀▄█",
+            "Binary 3": "　▀▄▌▐█",
+            "Shades": "▤▥▦▧▨▩",
+            "Circles": "◌○●",
+            "Circles 2": "◦◎●◉",
+            "Circles 3": "○●◯◎◉",
+            "Circles 4": "◌○●◯◎◉",
+            "Triangles": "△▷▽◁",
+            "Triangles 2": "△▷▽◁◢◣◤◥",
+            "Squares": "□■▣",
+            "Squares 2": "□■▣◇◆◈",
+            "Squares and Circles": "◌○●◯◎◉□■▣◇◆◈",
+            "Crosses": "✛✜✢✣✤✥✦✧",
+            "Stars": "✩✪✫✬✭✮✯✰",
+            "Flowers": "✾✿❀❁❇❈❉❊❋",
+        };
+
+        experimentalCharset = {
+            "Binary 4": "　▘▖▌▝▀▞▛▗▚▄▙▐▜▟█",
+            "Circles 5": "◯◎◉☍☉",
+            "Circles 6": "◌○●◯◎◉☍☉",
+            "Circles 7": "◌○●⚯⧟⚭⚬",
+            "Circles 8": "◯◎◉☍☉⚆⚇⚈⚉⦾⦿⧂⨀",
+            "Circles 9": "◌○●◯◎◉☍☉⚯⧟⚭⚬⚆⚇⚈⚉⦾⦿⧂⨀",
+            "Triangles 3": "△▷▽◁▲▶▼◀",
+            "Triangles 4": "△▷▽◁▲▶▼◀◬◢◣◤◥",
+            "Squares 3": "▫□▪■▣",
+            "Squares 4": "▫□▪■▣⧈⧉",
+            "Rectangles 1": "▫□▭▯▪■▬▮▣",
+            "Rectangles 2": "▫□▭▯◊◇▪■▬▮◆▣◈",
+            "Quadrilaterals 1": "▫□▭▯▱◊◇▪■▬▮▰◆▣◈",
+            "Quadrilaterals 2": "▫□▭▯▱◊◇▪■▬▮▰◆▣◈⧈⧉",
+            "Monograms": "⚊⚋",
+            "Digrams": "⚌⚍⚎⚏",
+            "Trigrams": "☰☱☲☳☴☵☶☷",
+            "N-Grams": "⚊⚋⚌⚍⚎⚏☰☱☲☳☴☵☶☷",
+            "Snow": "❄❅❆",
+            "Flowers and Snow": "✾✿❀❁❇❈❉❊❋❄❅❆",
+            "Asterisks and Suns": "✱✲✳✴✵✶✷✸✹✺✻✼✽❂❃",
+            "Asterisk-ish": "✛✜✢✣✤✥✦✧✩✪✫✬✭✮✯✰✱✲✳✴✵✶✷✸✹✺✻✼✽✾✿❀❁❂❃❄❅❆❇❈❉❊❋",
+            "planets": "☿♀♁♂♃♄♅♆♇",
+            "zodiac": "♈♉♊♋♌♍♎♏♐♑♒♓",
+            "notes": "♩♪♫♬♭♮♯"
+        };
+
+        var decNums = "0123456789";
+        var decNumsX = ["zero","one","two","three","four","five","six","seven","eight","nine"];
+        var hexNums = "0123456789abcdef";
+        var binNums = "01";
+
+        function stringDiv_Mod(systemRep, dividend, divisor) { // string/array, string/array, int
+            var res = [];
+            var carry = 0;
+
+            // division by hand from all numeric systems :D!
+
+            // go through each digit and divide
+            for (var i = 0; i < dividend.length; i++) {
+                var val = systemRep.indexOf(dividend[i]);
+                if (val === -1) throw "invalid digit: "+dividend[i]+" ("+i+" of "+dividend+")";
+                var newCarry = val % divisor;
+                // get basic value withour carry
+                var newValBase = Math.floor(val / divisor);
+                // get carry value
+                var carryVal = carry > 0 ? Math.floor(systemRep.length / (divisor / carry)) : 0;
+                // add additional carry of carry division
+                newCarry += carry > 0 ? Math.round((systemRep.length % (divisor / carry)) * carry) : 0;
+                // check if carry is now more than the actual divisor
+                var carryOverflow = Math.floor(newCarry / divisor);
+                // throw it all together
+                var newVal = newValBase + carryVal + carryOverflow;
+                // update carry for next round
+                carry = newCarry % divisor;
+                if (res.length > 0 || newVal > 0) res.push(systemRep[newVal]);
+            }
+            if (typeof dividend === "string") res = res.join("");
+            return [res, carry];
+        }
+
+        function convert(sourceSystem, value, targetSystem) {
+            var res = [];
+            while (true) {
+                var step = stringDiv_Mod(sourceSystem, value, targetSystem.length);
+                console.log(value, "->", step, targetSystem[Math.round(step[1])]);
+                res.unshift(targetSystem[Math.round(step[1])]);
+                if (step[0]) {
+                    value = step[0];
+                } else {
+                    break;
+                }
+            }
+            if (typeof targetSystem === "string") res = res.join("");
+            return res;
+        }
+
+        function hexStringDiv_Mod(dividend, divisor) {
+            return stringDiv_Mod(hexNums, dividend, divisor);
+        }
+
+        function init() {
+            console.log("test");
+            console.log("0 / 2 = " + hexStringDiv_Mod("0",2));
+            console.log("0xff82794e / 2 = " + hexStringDiv_Mod("ff82794e",2));
+            console.log("0xff82794e / 3 = " + hexStringDiv_Mod("ff82794e",3));
+            console.log("128 / 2 = " + stringDiv_Mod(decNums,"128",2));
+            console.log("128 / 2 = " + stringDiv_Mod(decNums,"128",2.5));
+            console.log("one,two,eight / 2 = " + stringDiv_Mod(decNumsX,["one","two","eight"],2));
+            console.log("99 -> [" + charsets.Flowers + "] = " + convert(decNums, "99", charsets.Flowers));
+            console.log("✿❀✾ -> decimal = " + convert(charsets.Flowers, "✿❀✾", decNums));
+            console.log("8 -> binary = " + convert(decNums, "8", binNums));
+            var styleSelectionBox = document.getElementById("styleSelection");
+            Object.keys(charsets).forEach(setName => {
+                var container = document.createElement("div");
+
+                var radioButton = document.createElement("input");
+                radioButton.setAttribute("type", "radio");
+                radioButton.setAttribute("name", "charset");
+                radioButton.setAttribute("id", "set:"+setName);
+                radioButton.setAttribute("value", setName);
+                container.appendChild(radioButton);
+
+                var labelRadio = document.createElement("label");
+                labelRadio.setAttribute("class", "radio");
+                labelRadio.setAttribute("for", "set:"+setName);
+                container.appendChild(labelRadio);
+
+                var label = document.createElement("label");
+                label.setAttribute("for", "set:"+setName);
+                label.appendChild(document.createTextNode(setName+" ("+charsets[setName]+")"));
+                container.appendChild(label);
+
+                styleSelectionBox.appendChild(container);
+            });
+        }
+
+        function triggerExperimental() {
+            document.getElementById("styles").removeChild(document.getElementById("experimentalButton"));
+            var styleSelectionBox = document.getElementById("styleSelection");
+            Object.keys(experimentalCharset).forEach(setName => {
+                var container = document.createElement("div");
+
+                var radioButton = document.createElement("input");
+                radioButton.setAttribute("type", "radio");
+                radioButton.setAttribute("name", "charset");
+                radioButton.setAttribute("id", "set:"+setName);
+                radioButton.setAttribute("value", setName);
+                container.appendChild(radioButton);
+
+                var labelRadio = document.createElement("label");
+                labelRadio.setAttribute("class", "radio");
+                labelRadio.setAttribute("for", "set:"+setName);
+                container.appendChild(labelRadio);
+
+                var label = document.createElement("label");
+                label.setAttribute("for", "set:"+setName);
+                label.appendChild(document.createTextNode(setName+" ("+experimentalCharset[setName]+")"));
+                container.appendChild(label);
+
+                styleSelectionBox.appendChild(container);
+            });
+        }
+
+        function triggerConvert() {
+            var radios = document.getElementsByName("charset");
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    var inputText = document.getElementById("inputText");
+                    var outputText = document.getElementById("outputText");
+                    console.log("using set:",charsets[radios[i].value] || experimentalCharset[radios[i].value]);
+                    outputText.value = convertText(charsets[radios[i].value] || experimentalCharset[radios[i].value], inputText.value);
+                    break;
+                }
+            }
+        }
+
+        function convertText(targetSet, text) {
+            console.log(targetSet);
+            console.log(text);
+            var words = text.split(/\s+/g);
+            console.log(words);
+            var i = 0;
+            words.forEach(word => {
+                var hexString = "";
+                for (var j = 0; j < word.length; j++) {
+                    hexString += word.charCodeAt(j).toString(16);
+                }
+                var newWord = convert(hexNums, hexString, targetSet);
+                console.log(word,"->","0x"+hexString,"->",newWord);
+                text = text.replace(word, newWord);
+                i++;
+            });
+            return text;
+        }
+    </script>
+</head>
+<body onload="init()">
+<div class="headblock">
+    <h1>Crop Circles</h1>
+    <h2>Converting Text into Obscure Glyphs</h2>
+</div>
+<div class="block" id="styles">
+    <h3>Style</h3>
+    <div id="styleSelection"></div>
+    <button id="experimentalButton" onclick="triggerExperimental()">Show Experimental Sets (may not align correctly, have emojis, or other weird inconsistencies)</button>
+</div>
+<div class="block">
+    <h3>Input</h3>
+    <textarea title="inputText" id="inputText"></textarea>
+</div>
+<div class="block">
+    <button onclick="triggerConvert()">Convert</button>
+</div>
+<div class="block">
+    <h3>Output</h3>
+    <textarea title="outputText" id="outputText"></textarea>
+</div>
+</body>
+</html>
