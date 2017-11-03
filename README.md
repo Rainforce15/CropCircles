@@ -1,2 +1,2 @@
 # CropCircles
-Converting Text into Obscure Glyphs
+Translating Text into Obscure Glyphs
